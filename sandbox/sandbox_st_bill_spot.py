@@ -89,15 +89,6 @@ st.write(song_mp3)
 
 # [1] generate a synthetic data set for this
 
-# need to make a LOT of progress on this thing today and tomorrow. 
-# gotta be more stressed about this...
-# how to do my work...
-
-# let's take a look 
-# [1] 
-# [2] 
-# [3] 
-
 # let's get this system up and running!
 
 # let's see if we can pull a dataset from the... data set...
