@@ -18,12 +18,12 @@ import json
 
 #%% For connecting to spotify instance; mainly composed of convenience methods
 class SpotifyConnector:
-    keys_json_path = '/home/ubuntu/insight/keys.json'
-    with open(keys_json_path) as json_file:
-        keys = json.load(json_file)
-
     # intialize the connector
     def __init__(self, client_id = None, client_secret = None, user = None):
+        keys_json_path = '/home/ubuntu/insight/keys.json'
+        with open(keys_json_path) as json_file:
+            self.keys = json.load(json_file)
+
         self.instance = self.__get_instance(self.keys['client_id'], self.keys['client_secret'])
 
         if user == None:
@@ -40,10 +40,10 @@ class SpotifyConnector:
         # get playlists from a user, if user not provided, user the default
         if user == None:
             user = self.user
-        return self.instance.user_playlists(user)
+        return self.instance.user_playlists(user)['items']
     def get_public_user_playlist_ids(self, user = None):
         playlists = self.get_public_user_playlists(user = user)
-        return [iplaylist['id'] for iplaylist in playlists['items']]  
+        return [iplaylist['id'] for iplaylist in playlists]  
     def get_public_user_playlists_formatted(self, user = None):
         playlists = self.get_public_user_playlists(user = user)
         return [self._format_playlist_info(iplaylist) for iplaylist in playlists]
@@ -64,7 +64,7 @@ class SpotifyConnector:
         if user == None:
             user = self.user
         tracks = self.get_tracks_from_playlist(playlist_id, user = user)
-        return [self._format_track_info(itrack )for itrack in tracks]
+        return [self._format_track_info(itrack) for itrack in tracks]
     def get_track_ids_from_playlist(self, playlist_id, user = None):
         if user == None:
             user = self.user
@@ -147,11 +147,40 @@ class DatabaseSpotifyAudio:
         return True
 
 #%% For exploring a spotify user - don't really care about this one right now
-class SpotifyUserExplorer:
-    def __init__(self):
-        pass
+
+#%%
+
+
+#%%
+ #%%   
+    # def write_to_df(self, list_db, list_name):
+    #     # pd.to_pickle()
+    #     pass
+    # def load_from_df(self, list_db, list_name):
+    #     # pd.read_pickle
+    #     pass
+    # def combine_track_lists(self, lists):
+    #     pass
+
+#%%
+test_list = TrackList()
+#%%
 
 #%% For creating lists of data... basically.. track lists lol 
+class SpotifyUserExplorer:
+    def __init__(self, user = None):
+        self.connection2spotify = SpotifyConnector(user = user)
+        self.playlist_df   = pd.DataFrame.from_records(self.connection2spotify.get_public_user_playlists_formatted())
+    def list_playlist_names(self):
+        return self.playlist_df.loc[:, 'name'].values
+    def get_playlist_id_from_name(self, name):
+        playlist_id = self.playlist_df.loc[self.playlist_df['name'].str.match(name),'id'].values
+        if len(playlist_id) > 1:
+            print('more than one playlist matches this name')
+            return False
+        else: 
+            return playlist_id[0]
+        
 class TrackList:
     def __init__(self):
         self.dataframe = []
@@ -162,23 +191,13 @@ class TrackList:
     #     pass
     def remove_missing_previews(self, inplace = False):
         pass
-    def write_to_df(self, list_db, list_name):
-        # pd.to_pickle()
-        pass
-    def load_from_df(self, list_db, list_name):
-        # pd.read_pickle
-        pass
-    def combine_track_lists(self, lists):
-        pass
 
-#%%
-test_list = TrackList()
-#%%
 class TrackListSpotify(TrackList):
     def __init__(self):
-        # dataframe contains
-            # track_id, artist_id, playlist_id, user_id, track_name, playlist_name, etc. 
-        pass
+        super.__init__()
+    #     # dataframe contains
+    #         # track_id, artist_id, playlist_id, user_id, track_name, playlist_name, etc. 
+    #     pass
 
     # add songs from different spotify sources
     def add_from_public_user_playlist(self, playlist_id, user = None):
@@ -192,12 +211,13 @@ class TrackListSpotify(TrackList):
     def add_from_public_user_all(self, user = None):
         return 1
     
-    def combine_lists(self, all_lists)
+    def combine_lists(self, all_lists):
+        pass
 
     # save information out to a dataframe!
         # what do we want to call this one? 
 
-
+#%%
 class TrackListBillboards:
     def __init__(self):
         pass
