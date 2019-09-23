@@ -1,4 +1,3 @@
-#%%
 import pandas as pd
 import numpy as np
 import os.path as path
@@ -93,6 +92,7 @@ class SpotifyConnector:
         track_info['preview_url']   = track['preview_url']
         track_info['uri']           = track['uri']
         return track_info
+
     def _format_playlist_info(self, playlist):
         playlist_info       = playlist
         # ['id']
@@ -164,7 +164,6 @@ class DatabaseSpotifyAudio:
 
 #%%
 test_list = TrackList()
-#%%
 
 #%% For creating lists of data... basically.. track lists lol 
 class SpotifyUserExplorer:
@@ -180,11 +179,11 @@ class SpotifyUserExplorer:
             return False
         else: 
             return playlist_id[0]
-        
+
 class TrackList:
     def __init__(self):
         self.dataframe = []
-        pass
+
     def add_to_audio_db(self):
         pass
     # def spotify_id_from_names(self, song_names, artist_names):
@@ -193,26 +192,61 @@ class TrackList:
         pass
 
 class TrackListSpotify(TrackList):
-    def __init__(self):
-        super.__init__()
-    #     # dataframe contains
-    #         # track_id, artist_id, playlist_id, user_id, track_name, playlist_name, etc. 
+    def __init__(self, user = None):
+        super(TrackList, self).__init__()
+        self.connection2spotify = SpotifyConnector(user = user)
+        self.dataframe          = pd.DataFrame(columns = ['artist_names', 'artist_ids', 'name','id','preview_url','uri', 'playlist_id'])
+        self.list_db_path       = '/home/ubuntu/insight/data/raw/lists_spotify/'
+        self.list_name          = None
+
+    def add_all_tracks_from_public_user(self, user = None):
+        sublist_df = pd.DataFrame.from_records(self.connection2spotify.get_public_user_tracks_formatted(user = user))
+        if user == None:
+            user = self.connection2spotify.user
+        sublist_df['playlist_id'] = sublist_df.shape[0]*['[all][' + user + ']']
+        self.dataframe = self.dataframe.append(sublist_df)
+
+    def add_tracks_from_public_user_playlist(self, playlist_id, user = None):
+        sublist_df = pd.DataFrame.from_records(self.connection2spotify.get_tracks_from_playlist_formatted(playlist_id = playlist_id, user = user))
+        if user == None:
+            user = self.connection2spotify.user
+        sublist_df['playlist_id'] = sublist_df.shape[0]*['[' + playlist_id + ']' + '[' + user + ']']
+        self.dataframe = self.dataframe.append(sublist_df)
+
+    def load_list_from_db(self, list_name = None):
+        if list_name == None:
+            list_name = self.list_name
+        else:
+            self.list_name = list_name
+        self.dataframe = pd.read_pickle(os.path.join(self.list_db_path, self.list_name + '.pkl'))
+
+    def set_list_name(self, list_name = None):
+        self.list_name = list_name
+
+    def write_list_to_db(self, list_name = None):
+        if list_name == None:
+            list_name = self.list_name
+        else:
+            self.list_name = list_name
+        self.dataframe.to_pickle(os.path.join(self.list_db_path, self.list_name + '.pkl'))
+
+    def populate_audio_database(self):
+        db_audio = DatabaseSpotifyAudio()
+        track_id_list = self.dataframe.loc[:,'id'].values
+        num_tracks = len(track_id_list)
+        itrack = 0
+        for track_id in track_id_list:
+            db_audio.insert_track_from_id(track_id) 
+            itrack = itrack  + 1
+            print('%d out of %d\n'%(itrack, num_tracks))
+
+    # def combine_lists(self, all_lists):
     #     pass
 
-    # add songs from different spotify sources
-    def add_from_public_user_playlist(self, playlist_id, user = None):
-        # adds songs from this user playlist
-        return 1
-
-    def add_from_public_user_playlists(self, playlist_ids, user = None):
-        # add songs from multiple playlists
-        return 1
-
-    def add_from_public_user_all(self, user = None):
-        return 1
-    
-    def combine_lists(self, all_lists):
-        pass
+    # # add songs from different spotify sources
+    # def add_from_public_user_playlist(self, playlist_id, user = None):
+    #     # adds songs from this user playlist
+    #     return 1
 
     # save information out to a dataframe!
         # what do we want to call this one? 
@@ -252,7 +286,6 @@ db_audio.insert_track_from_id(tracks[0]['id'])
 # def list_artists
 # def num_entries
 
-
 #%%
 # SpotifyTracksList...
 # what does this do? 
@@ -270,3 +303,37 @@ test_ssl = SpotifySongsList()
 # now... how to download and store audio... need to figure this out...
 
 #%% 
+
+#%%
+# getting feature sets on mp3s
+# featurizer
+
+
+#%%
+class Featurizer:
+    def __init__(self):
+        pass
+
+class FeatureSpotifyLow(Featurizer):
+    def __init__(self):
+        pass
+
+class FeatureMelSpectrogram(Featurizer):
+    def __init__(self):
+        pass
+
+class FeatureMusicnn(Featurizer):
+    def __init__(self):
+        pass
+    # outputs...
+        # mel spectrogram
+        # tag grams
+        # music nn features
+
+class FeatureTags(Featurizer):
+    def __init__(self):
+        pass
+
+class FeatureTagGrams(Featurizer):
+    def __init__(self):
+        pass
