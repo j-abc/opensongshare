@@ -154,8 +154,33 @@ test_features = collapse_time_in_features(test_features, ['taggram', 'penultimat
 X = np.vstack(db_features['mean_taggram'].values)
 Y = np.vstack(test_features['mean_taggram'].values)
 
-from sklearn.metrics.pairwise import cosine_similarity
-dmat = cosine_similarity(X = X, Y = Y)
+from sklearn.metrics.pairwise import pairwise_distances
+metric = 'euclidean'
+dmat = pairwise_distances(X = X, Y = Y, metric = 'euclidean')
+# dmat = cosine_similarity(X = X, Y = Y)
+
+#%%
+# see if we can identify ourselves for each track
+which_min = np.argmin(dmat, axis = 0)
+print(db_features.loc[which_min, 'track_id'])
+#%%
+print(test_features['track_id'])
+
+#%%
+# see if we can identify ourselves given the mean of the similarity..
+collapse_d = np.mean(dmat, axis = 1)
+#%%
+which_db_songs = np.argsort(collapse_d)[:10]
+print(db_features.loc[which_db_songs,'track_id'])
+
+#%%
+print(test_features['track_id'])
+
+#%%
+pd.merge(db_features.loc[which_db_songs,'track_id'], my_list.dataframe, left_on = 'track_id', right_on = 'id')
+
+#%%
+pd.merge(db_features.loc[which_max,'track_id'], my_list.dataframe, left_on = 'track_id', right_on = 'id')
 
 #%%
 import seaborn as sns
