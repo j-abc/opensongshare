@@ -15,7 +15,8 @@ import time
 import wget
 import json
 
-#%% For connecting to spotify instance; mainly composed of convenience methods
+#%%
+# For connecting to spotify instance; mainly composed of convenience methods
 class SpotifyConnector:
     # intialize the connector
     def __init__(self, client_id = None, client_secret = None, user = None):
@@ -123,7 +124,7 @@ class SpotifyConnector:
                             credentials.')
         return S
 
-#%% For connecting to spotify audio database on local computer
+# For connecting to spotify audio database on local computer
 class DatabaseSpotifyAudio:
     # update the dataframe with this information
             # dataframe has what fields? 
@@ -133,9 +134,11 @@ class DatabaseSpotifyAudio:
                 # artist_ids
                 # preview_url
                 # preview_mp3_path
+
     def __init__(self):
         self.audio_db_path = '/home/ubuntu/insight/data/raw/spotify_audio/mp3/'
         self.connection2spotify = SpotifyConnector() 
+
     def insert_track_from_id(self, track_id):
         mp3_name = track_id + '.mp3'
         mp3_path = os.path.join(self.audio_db_path, mp3_name)
@@ -146,13 +149,10 @@ class DatabaseSpotifyAudio:
             wget.download(track_info['preview_url'], mp3_path)
         return True
 
-#%% For exploring a spotify user - don't really care about this one right now
+# For exploring a spotify user - don't really care about this one right now
 
-#%%
-
-
-#%%
- #%%   
+#
+ #
     # def write_to_df(self, list_db, list_name):
     #     # pd.to_pickle()
     #     pass
@@ -162,10 +162,10 @@ class DatabaseSpotifyAudio:
     # def combine_track_lists(self, lists):
     #     pass
 
-#%%
-test_list = TrackList()
+#
+# test_list = TrackList()
 
-#%% For creating lists of data... basically.. track lists lol 
+# For creating lists of data... basically.. track lists lol 
 class SpotifyUserExplorer:
     def __init__(self, user = None):
         self.connection2spotify = SpotifyConnector(user = user)
@@ -186,10 +186,26 @@ class TrackList:
 
     def add_to_audio_db(self):
         pass
+
     # def spotify_id_from_names(self, song_names, artist_names):
     #     pass
-    def remove_missing_previews(self, inplace = False):
-        pass
+    def remove_tracks_with_missing_previews(self):
+        isnull = self.dataframe['preview_url'].isnull()
+        self.dataframe = self.dataframe[~isnull]
+
+    def _load_features_for_track(self, track_id, set_name):
+        track_path = os.path.join('/home/ubuntu/insight/data/feature_sets/', set_name, track_id + '.pkl')
+        with open(track_path, 'rb') as handle:
+            features = pickle.load(handle)  
+        return features      
+
+    # load or calculate the features? 
+    def load_features(self, set_name):
+        track_ids = self.dataframe['id'].values
+        features = [self._load_features_for_track(track_id, set_name) for track_id in track_ids]
+        features_df = pd.DataFrame.from_records(features)
+        features_df['track_id'] = track_ids
+        return features_df
 
 class TrackListSpotify(TrackList):
     def __init__(self, user = None):
@@ -308,32 +324,4 @@ test_ssl = SpotifySongsList()
 # getting feature sets on mp3s
 # featurizer
 
-
-#%%
-class Featurizer:
-    def __init__(self):
-        pass
-
-class FeatureSpotifyLow(Featurizer):
-    def __init__(self):
-        pass
-
-class FeatureMelSpectrogram(Featurizer):
-    def __init__(self):
-        pass
-
-class FeatureMusicnn(Featurizer):
-    def __init__(self):
-        pass
-    # outputs...
-        # mel spectrogram
-        # tag grams
-        # music nn features
-
-class FeatureTags(Featurizer):
-    def __init__(self):
-        pass
-
-class FeatureTagGrams(Featurizer):
-    def __init__(self):
-        pass
+#%% 
