@@ -82,8 +82,7 @@ my_list.write_list_to_db(list_name = 'cocjin_all_v2')
 my_list.populate_audio_database()
 
 #%%
-def get_track_mp3_path(track_id, audio_db_path = '/home/ubuntu/insight/data/raw/spotify_audio/mp3/'):
-    return os.path.join(audio_db_path, track_id + '.mp3')
+
 
 #%%
 def get_features_for_track(track_id):
@@ -139,11 +138,6 @@ my_list.remove_tracks_with_missing_previews()
 db_features = my_list.load_features(set_name = 'musicnn_test')
 
 #%%
-def collapse_time_in_features(features_df, feature_names):
-    for feature_name in feature_names:
-        features_df['mean' + '_' + feature_name] = features_df[feature_name].apply(lambda x: np.mean(x, axis = 0))
-    return features_df
-
 db_features   = collapse_time_in_features(db_features, ['taggram', 'penultimate'])
 test_features = collapse_time_in_features(test_features, ['taggram', 'penultimate'])
 #%%
