@@ -1,3 +1,3 @@
-from .Featurizer import Featurizer
-from .MusicnnFeaturizer import MusicnnFeaturizer
-from .SpotifyAudioFeaturizer import SpotifyMusicalityFeaturizer
+from Featurizer import *
+from FeaturizerSpotify import *
+from FeaturizerMusicnn import *

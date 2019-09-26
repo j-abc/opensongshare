@@ -1,9 +1,9 @@
 import os
 import musicnn
 from musicnn.extractor import extractor
-from .Featurizer import Featurizer
+from Featurizer import Featurizer
 
-class MusicnnFeaturizer(Featurizer):
+class FeaturizerMusicnn(Featurizer):
     def __init__(self, model = 'MTT_musicnn'):
         Featurizer.__init__(self, name = model)
         self.feature_keys  = ['penultimate_over_time', 'taggram_over_time', 'penultimate', 'taggram']
