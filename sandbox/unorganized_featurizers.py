@@ -54,8 +54,6 @@ audio_features
 # https://developer.spotify.com/documentation/web-api/reference/tracks/get-audio-features/
 feature_keys = ['danceability', 'energy', 'key','loudness', 'mode','speechiness','acousticness','instrumentalness','liveliness','valence','temp']
 
-
-
 #%%
 
 
@@ -151,8 +149,8 @@ def collapse_time_in_features(features_df, feature_names):
 db_features   = collapse_time_in_features(db_features, ['taggram', 'penultimate'])
 test_features = collapse_time_in_features(test_features, ['taggram', 'penultimate'])
 #%%
-X = np.vstack(db_features['mean_taggram'].values)
-Y = np.vstack(test_features['mean_taggram'].values)
+X = np.vstack(db_features['mean_penultimate'].values)
+Y = np.vstack(test_features['mean_penultimate'].values)
 
 from sklearn.metrics.pairwise import pairwise_distances
 metric = 'euclidean'
@@ -180,11 +178,32 @@ print(test_features['track_id'])
 pd.merge(db_features.loc[which_db_songs,'track_id'], my_list.dataframe, left_on = 'track_id', right_on = 'id')
 
 #%%
-pd.merge(db_features.loc[which_max,'track_id'], my_list.dataframe, left_on = 'track_id', right_on = 'id')
+pd.merge(db_features.loc[which_min,'track_id'], my_list.dataframe, left_on = 'track_id', right_on = 'id')
 
 #%%
 import seaborn as sns
 sns.heatmap(dmat)
+
 #%%
 # more things to do!
 # parallelize the feature computations
+
+#%%
+# how to do this... and what to do about this...
+# let's see exactly what to do!
+
+#%%
+
+
+import multiprocessing
+num_cores = multiprocessing.cpu_count()
+
+#%%
+print(num_cores)
+
+#%%
+
+
+
+
+#%%
