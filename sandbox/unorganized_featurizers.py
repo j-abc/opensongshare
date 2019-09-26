@@ -1,8 +1,8 @@
-import musicnn
-import pandas as pd
 #%%
 
-# take in a track 
+#%%
+import musicnn
+import pandas as pd
 #%%
 class Featurizer:
     def __init__(self):
@@ -64,12 +64,10 @@ feature_keys = ['danceability', 'energy', 'key','loudness', 'mode','speechiness'
 import musicnn
 from musicnn.extractor import extractor
 import numpy as np
+
+#%%
 # we want to save the taggram and the penultimate layer out
-
-
 # now.. we want to save the features as a dictionary.
-# so... let us do that. 
-
 #%%
 my_user = SpotifyUserExplorer()
 my_user.list_playlist_names()
