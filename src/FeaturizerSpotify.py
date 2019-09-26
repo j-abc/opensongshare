@@ -1,6 +1,6 @@
 import os
-from Featurizer import Featurizer
-from ..SpotifyConnector import SpotifyConnector
+from .Featurizer import Featurizer
+from .SpotifyConnector import SpotifyConnector
 
 class FeaturizerSpotify(Featurizer):
     def __init__(self):
@@ -9,6 +9,5 @@ class FeaturizerSpotify(Featurizer):
         self.connection2spotify = SpotifyConnector()
         
     def calculate_features_for_track(self, track_id):
-        out_features = self.connection2spotify.instance.audio_features(track_id)
-        out_features['id'] = track_id
+        out_features = self.connection2spotify.instance.audio_features(track_id)[0]
         return out_features

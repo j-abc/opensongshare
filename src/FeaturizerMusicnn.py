@@ -1,7 +1,8 @@
+import numpy as np
 import os
 import musicnn
 from musicnn.extractor import extractor
-from Featurizer import Featurizer
+from .Featurizer import Featurizer
 
 class FeaturizerMusicnn(Featurizer):
     def __init__(self, model = 'MTT_musicnn'):

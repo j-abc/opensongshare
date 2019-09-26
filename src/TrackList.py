@@ -14,8 +14,8 @@ import sys
 import time
 import wget
 import json
-from ..SpotifyConnector import SpotifyConnector
-from ..DatabaseSpotifyAudio import DatabaseSpotifyAudio
+from .SpotifyConnector import SpotifyConnector
+from .DatabaseSpotifyAudio import DatabaseSpotifyAudio
 
 class TrackList:
     def __init__(self):
