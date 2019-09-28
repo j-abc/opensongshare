@@ -91,11 +91,7 @@ def rank_from_similarity_matrix(sim_mat):
     return db_rankings
 
 #%% Running a single recommendation run
-db_feats, playlist_feats = extract_features(db_track_ids, playlist_track_ids, featurizer)
-sim_mat                  = compose_similarity_matrix(db_feats, playlist_feats, similarity_measure)
-db_rankings              = rank_from_similarity_matrix(sim_mat)
 
 #%% things to test for the recommendation 
 
 # spotify musicality --> 
-# 
