@@ -149,11 +149,9 @@ metric = 'euclidean'
 dmat = pairwise_distances(X = X, Y = Y, metric = 'euclidean')
 # dmat = cosine_similarity(X = X, Y = Y)
 
-#%%
 # see if we can identify ourselves for each track
 which_min = np.argmin(dmat, axis = 0)
 print(db_features.loc[which_min, 'track_id'])
-#%%
 print(test_features['track_id'])
 
 #%%

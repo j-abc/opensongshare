@@ -10,7 +10,7 @@ class FeaturizerMusicnn(Featurizer):
         self.feature_keys  = ['penultimate_over_time', 'taggram_over_time', 'penultimate', 'taggram']
         if 'MTT' in self.name:
             self.tags = musicnn.configuration.MTT_LABELS
-        elif 'MSD' in name:
+        elif 'MSD' in self.name:
             self.tags = musicnn.configuration.MSD_LABELS
         
     def calculate_features_for_track(self, track_id):

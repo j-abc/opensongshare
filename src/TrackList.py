@@ -27,6 +27,9 @@ class TrackList:
         isnull = self.dataframe['preview_url'].isnull()
         self.dataframe = self.dataframe[~isnull]
 
+    def remove_duplicate_tracks(self):
+        self.dataframe.drop_duplicates(subset = 'id', inplace = True)
+
     def _load_features_for_track(self, track_id, set_name):
         track_path = os.path.join('/home/ubuntu/insight/data/feature_sets/', set_name, track_id + '.pkl')
         with open(track_path, 'rb') as handle:
