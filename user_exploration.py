@@ -1,13 +1,3 @@
-# import src.Widgets
-
-# user_exploration.py 
-
-# specify our user
-# define which playlist(s) to look at
-# visualize the playlists in t-SNE space
-# color t-SNE space
-
-# let's start by defining our user
 import streamlit as st 
 from src import * 
 import pandas as pd
@@ -17,11 +7,11 @@ class StreamlitInterface:
         self.use_streamlit = use_streamlit
         self.display_instructions = display_instructions
 
-    def select_user(self):
-        default_user = '1240204888'
+    def select_user(self, instructions = ''):
+        default_user = ''
         user_id = default_user
         if self.use_streamlit:
-            user_id = st.text_input(label = 'Enter the user id that you are interested in.', value = default_user)
+            user_id = st.text_input(label = instructions, value = default_user)
         return user_id
 
     def write(self, *inputs):
@@ -30,122 +20,143 @@ class StreamlitInterface:
         else: 
             print(*inputs)
 
-    def select_single_playlist_from_user(self, user_id):
+    def select_single_playlist_from_user(self, user_id, instructions = 'Select a playlist of interest'):
         user_explorer = SpotifyUserExplorer(user_id)
         playlists = user_explorer.list_playlist_names().tolist()
         if self.use_streamlit:
-            index = st.selectbox('Select a playlist of interest', playlists)
-            playlist_name = playlists[index]
-            playlist_id   = user_explorer.get_playlist_id_from_name(playlist_name)
-            st.text('Playlist name: ' + playlist_name  + '\nPlaylist id: ' + playlist_id)
-            return playlist_id
+            index = st.selectbox(instructions, ['', 'all playlists'] + playlists)
+            if index == 0:
+                playlist_name = ''
+                playlist_id   = ''
+            elif index == 1:
+                playlist_name = 'all playlists'
+                playlist_id = 'all'
+            else:
+                playlist_name = playlists[index-2]
+                playlist_id   = user_explorer.get_playlist_id_from_name(playlist_name)
+            return playlist_id, playlist_name
 
     def display_tracks_in_tracklist(self, tracklist):
         st.write(tracklist.dataframe.loc[:,['name', 'artist_names']])
 
-    # def select_multiple_playlists_from_user(self, user_id):
-    #     user_explorer = SpotifyUserExplorer(user_id)
-    #     playlists = my_user_explorer.list_playlist_names().tolist()
-    #     default_idx = 0
-    #     idx = default_idx
-    #     if self.use_streamlit:
-    #         playlist_name = st.selectbox('Select a playlist of interest', my_playlists, index = 0)
-    #     return user_explorer.get_playlist_id_from_name(playlist_name)
+
+while True: 
+    my_interface = StreamlitInterface(use_streamlit = True)
+
+    ##### DEFINING OUR USERS
+    users = {}
+    users['1'] = {}
+    users['2'] = {}
+
+    st.header('OpenSongShare')
+    st.subheader('Helping friends share music')
+
+    st.markdown('***')
+    st.subheader('First, enter your and your friend\'s Spotify user ids.')
+    users['1']['id'] = my_interface.select_user('Enter your Spotify user id:')
+    try:
+        users['1']['explorer'] = SpotifyUserExplorer(users['1']['id'])    
+        users['1']['valid_user'] = True
+    except: 
+        users['1']['valid_user'] = False
+        if users['1']['id']:
+            st.write('Your specified spotify id does not exist, please enter another.')
+
+    users['2']['id'] = my_interface.select_user('Enter your friend\'s Spotify user id:')
+    try:
+        users['2']['explorer'] = SpotifyUserExplorer(users['2']['id'])    
+        users['2']['valid_user'] = True
+    except: 
+        users['2']['valid_user'] = False
+        if users['2']['id']:
+            st.write('Your friend\'s specified spotify id does not exist, please enter another.')
     
-test_interface = StreamlitInterface(use_streamlit = True)
-user_id = test_interface.select_user()
-user_explorer = SpotifyUserExplorer(user_id)
-test_interface.write(user_id)
+    if not users['1']['valid_user'] or not users['2']['valid_user']:
+        break
 
-# now check out the user's playlists
+    ##### DEFINING SEED AND DATABASE
+    
+    st.subheader('Who is recommending songs to whom?')
+    sel_idx = st.selectbox('', ['---','I am recommending songs to my friend.', 'My friend is recommending songs to me.'], value = 0)
 
-st.header('Here, we will analyze what kinds of songs you listen to!')
+    if sel_idx == 0:
+        break
 
-which_track_set = st.radio('What would you like to analyze?', ['All public songs', 'A single playlist', 'A combo of playlists'])
-playlist_id = test_interface.select_single_playlist_from_user(user_id)
-st.write(playlist_id)
-
-# now get all of the tracks from this playlist
-tracklist = TrackListSpotify(user = user_id)
-tracklist.add_tracks_from_public_user_playlist(playlist_id)
-tracklist.remove_tracks_with_missing_previews()
-tracklist.remove_duplicate_tracks()
-track_ids = tracklist.dataframe['id'].values
-
-test_interface.display_tracks_in_tracklist(tracklist)
-
-# now let's featurize it
-feat_musicnn   = FeaturizerMusicnn()
-track_features = feat_musicnn.get_features_for_tracks(track_ids)
-features_df    = pd.DataFrame.from_records(track_features)
-
-# let's show the songs against the taggrams
-
-# what features do we have? 
-st.write(features_df.columns)
-
-# we need to convert the features to taggram vs. song id
-tagmat = np.vstack(features_df['taggram'].values)
-st.write(tagmat.shape)
-
-tag_df = pd.DataFrame(data = tagmat, columns = feat_musicnn.tags)
-tag_df['id'] = features_df['id']
-
-st.write(tag_df)
-
-tag_df.set_index('id', inplace = True)
-import seaborn as sns
-f = sns.heatmap(tag_df)
-# st.write(dir(f))
-st.pyplot(f.get_figure())
+    st.markdown('***')
+    st.subheader('Which playlist would you like to compare?')
+    st.write("Or, if you want, you can compare against all recent playlists by selecting the ''all recent playlists'' option")
 
 
-# Clustering
-from sklearn.manifold import TSNE
-from sklearn import cluster
+    users['1']['sel_play_id'], users['2']['sel_play_name'] = my_interface.select_single_playlist_from_user(users['1']['id'], 
+    'Select one of your playlists')
 
-# Bokeh
-from bokeh.io import output_notebook
-from bokeh.plotting import figure, show, ColumnDataSource
-from bokeh.models import HoverTool
+    users['2']['sel_play_id'], users['2']['sel_play_name'] = my_interface.select_single_playlist_from_user(users['2']['id'], 
+    "Select one of your friend's playlists")
 
-# Basic
-import numpy as np
-import pandas as pd
+    if not users['1']['sel_play_id'] or not users['2']['sel_play_id']:
+        break
+    
+    # now get all of the tracks from this playlist
+    for idx in ['1', '2']:
+        users[idx]['tracklist'] = TrackListSpotify(user = users[idx]['id'])
+        if users[idx]['sel_play_id'] == 'all':
+            users[idx]['tracklist'].add_all_tracks_from_public_user()
+        else:
+            users[idx]['tracklist'].add_tracks_from_public_user_playlist(users[idx]['sel_play_id'])
+        users[idx]['tracklist'].remove_tracks_with_missing_previews()
+        users[idx]['tracklist'].remove_duplicate_tracks()
 
-X = 
-tsne = TSNE(init='pca', perplexity=40, learning_rate=1000, 
-            early_exaggeration=8.0, n_iter=1000, random_state=0, metric='l2')
-tsne_representation = tsne.fit_transform(X)
+    st.write('Here are the songs in your playlist!')
+    my_interface.display_tracks_in_tracklist(users['1']['tracklist'])
+
+    st.write("And in your friend's playlist!")
+    my_interface.display_tracks_in_tracklist(users['2']['tracklist'])
 
 
-# from bokeh.plotting import figure
-# long_tag_df = tag_df.melt(id_vars = ['id'])
-# st.write(long_tag_df)
-# p = figure()
-# hm = p.rect(source = long_tag_df, x='variable', y='id',fill_color={'field': 'value'}, width = 100, height = 100)
-# st.bokeh_chart(hm)
-# x = [1, 2, 3, 4, 5]
-# y = [6, 7, 2, 4, 5]
-# p = figure(title='simple line example',x_axis_label='x',y_axis_label='y')
-# p.line(x, y, legend='Trend', line_width=2)
-# st.bokeh_chart(p)
+    feat_musicnn   = FeaturizerMusicnn()
+    for idx in ['1', '2']:
+        track_ids      = users[idx]['tracklist'].dataframe['id'].values
+        track_features = feat_musicnn.get_features_for_tracks(track_ids)
+        features_df    = pd.DataFrame.from_records(track_features)
+        # tagmat         = np.vstack(features_df['taggram'].values)
+        # tag_df         = pd.DataFrame(data = tagmat, columns = feat_musicnn.tags)
+        # tag_df['id']   = features_df['id']
+        users[idx]['feat_df'] = features_df
 
-#%%
-# import bokeh
-# from bokeh.charts import HeatMap, bins, output_file, show, vplot
-# hm = HeatMap(long_tag_df, x = bins('variable'), y = bins('id'), values = 'value')
+    from sklearn.metrics.pairwise import pairwise_distances
+    import numpy as np
 
-#%%
-# track_ids = tracklist.dataframe['id'].values
+    def rank_db_from_playlist(pl_feat_df, db_feat_df, db_list_df, feature_name = 'taggram', metric = 'euclidean', num_songs = 20): 
+            pl_feat_array = np.vstack(pl_feat_df[feature_name].values)
+            db_feat_array = np.vstack(db_feat_df[feature_name].values)
 
-# how about we show attributes of the tracks? 
+            dmat = pairwise_distances(X = db_feat_array, Y = pl_feat_array, metric = metric)
 
-# okay! let's grab the playlist id
-# test_interface.write(playlist_id)
+            collapse_dmat = np.mean(dmat, axis = 1)
+            print(collapse_dmat.shape)
 
-# if which_track_set == 'All public songs':
-#     pass    
-# elif which_track_set == 'A single playlist':
-# elif which_track_set == 'Several playlists':
-#     pass
+            sorted_db_idx = np.argsort(collapse_dmat)
+            # sorted_db_idx = sorted_db_idx[::-1] # turn on for euclidean to get worst songs
+            # top 5 and bottom 5 - and user assessment
+            which_db_songs = sorted_db_idx[:num_songs]
+            id_df = db_feat_df.loc[which_db_songs,['id']]
+            id_df.insert(1, "rank", [i for i in range(id_df.shape[0])], True)
+            return pd.merge(id_df, db_list_df, on = 'id')
+
+    if sel_idx == 0:
+        pl_id = '1'
+        db_id = '2'
+    else:
+        pl_id = '2'
+        db_id = '1'
+
+
+    which_prompt = ['Here are the songs that you should give to your friend!', "Here are songs that you may like in your friend's playlist!"]
+    st.subheader(which_prompt[sel_idx])
+    rank_df = rank_db_from_playlist(users[pl_id]['feat_df'], users[db_id]['feat_df'], users[db_id]['tracklist'].dataframe)
+    st.write(rank_df)
+
+    # let's look at this in latent dimensional space!
+    
+
+    break
