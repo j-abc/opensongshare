@@ -61,4 +61,6 @@ for model_name in model_types:
 # check how mnay songs are in each playlist
 
 
+#%%
+
 
