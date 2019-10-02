@@ -83,7 +83,7 @@ while True:
         break
 
     st.markdown('***')
-    st.subheader('Which playlist would you like to compare?')
+    st.subheader('Which playlists would you like to compare?')
     st.write("Or, if you want, you can compare against all recent playlists by selecting the ''all recent playlists'' option")
 
 
@@ -118,10 +118,11 @@ while True:
         track_ids      = users[idx]['tracklist'].dataframe['id'].values
         track_features = feat_musicnn.get_features_for_tracks(track_ids)
         features_df    = pd.DataFrame.from_records(track_features)
-        # tagmat         = np.vstack(features_df['taggram'].values)
-        # tag_df         = pd.DataFrame(data = tagmat, columns = feat_musicnn.tags)
-        # tag_df['id']   = features_df['id']
+        tagmat         = np.vstack(features_df['taggram'].values)
+        tag_df         = pd.DataFrame(data = tagmat, columns = feat_musicnn.tags)
+        tag_df['id']   = features_df['id']
         users[idx]['feat_df'] = features_df
+        users[idx]['tag_df']  = tag_df
 
     from sklearn.metrics.pairwise import pairwise_distances
     import numpy as np
@@ -143,20 +144,45 @@ while True:
             id_df.insert(1, "rank", [i for i in range(id_df.shape[0])], True)
             return pd.merge(id_df, db_list_df, on = 'id')
 
-    if sel_idx == 0:
-        pl_id = '1'
-        db_id = '2'
-    else:
+    if sel_idx == 1:
         pl_id = '2'
         db_id = '1'
+    else:
+        pl_id = '1'
+        db_id = '2'
 
-
+    st.markdown('***')
+    st.subheader("Let's get our recommendations...")
     which_prompt = ['Here are the songs that you should give to your friend!', "Here are songs that you may like in your friend's playlist!"]
-    st.subheader(which_prompt[sel_idx])
+    st.subheader(which_prompt[sel_idx-1])
     rank_df = rank_db_from_playlist(users[pl_id]['feat_df'], users[db_id]['feat_df'], users[db_id]['tracklist'].dataframe)
     st.write(rank_df)
 
-    # let's look at this in latent dimensional space!
-    
+    st.markdown('***')
+    st.subheader("Let's explore what they look like!...")
 
+    # Clustering
+    from sklearn.manifold import TSNE
+    from sklearn import cluster
+
+    # Basic
+    import numpy as np
+    import pandas as pd
+    import seaborn as sns
+    from matplotlib import pyplot as plt
+
+    # How does this look in latent dimensional space?? 
+    full_tag_df = pd.concat([users['1']['tag_df'], users['2']['tag_df']])
+    full_tag_df.drop(columns = ['id'], inplace = True)
+
+    tsne = TSNE(n_components = 2, verbose = 1, perplexity = 40, n_iter = 2000)
+    tsne_results = tsne.fit_transform(full_tag_df.values)
+
+    plt.figure(figsize = (16, 11))
+    plt.scatter(tsne_results[:,0], tsne_results[:,1])
+    st.pyplot()
+
+
+
+    
     break
