@@ -1,17 +1,20 @@
-from . import * 
 import streamlit as st
 import numpy as np
 import pandas as pd
 from sklearn.metrics.pairwise import pairwise_distances
+from sklearn.cluster import KMeans
+from .FeaturizerMusicnn import *
+from .FeaturizerSpotify import *
+from .Featurizer import * 
 
 class Recommender:
-    def __init__(self, model_type , which_layer = '', distance_type = 'euclidean', db_centroid_type = 'None', rank_type = 'mean', report_streamlit = False):
+    def __init__(self, model_type, which_layer = '', distance_type = 'euclidean', pl_centroid_type = 'None', rank_type = 'mean', report_streamlit = False):
         # set our recommender parameters
         self.model_type       = model_type
         self.which_layer      = which_layer
         self.distance_type    = distance_type
         self.rank_type        = rank_type
-        self.db_centroid_type = db_centroid_type
+        self.pl_centroid_type = pl_centroid_type
 
         # will we report streamlit?
         self.report_streamlit = report_streamlit
@@ -30,7 +33,7 @@ class Recommender:
         db_raw_feats = pd.DataFrame.from_records(self.featurizer.get_features_for_tracks(database_track_ids))
 
         # extract and shape features
-        if which_layer:
+        if self.which_layer:
             pl_feat_array = np.vstack(pl_raw_feats[self.which_layer].values)
             db_feat_array = np.vstack(db_raw_feats[self.which_layer].values)
         else: # if not musicnn, assume we use all 
@@ -38,8 +41,8 @@ class Recommender:
             db_feat_array = np.vstack(db_raw_feats.values)
 
         # do we want to reduce the db to centroids? 
-        if not(db_centroid_type == 'None'):
-            db_feat_array = self._get_database_centroids(db_feat_array, db_centroid_type = db_centroid_type)
+        if not(self.pl_centroid_type == 'None'):
+            pl_feat_array = self._get_playlist_centroids(pl_feat_array, pl_centroid_type =self.pl_centroid_type)
 
         # alright! now lets rank it
         rank2dbidx = self._dist2rank(pl_feat_array, db_feat_array, distance_type = self.distance_type, rank_type = self.rank_type)
@@ -56,34 +59,32 @@ class Recommender:
 
         return rank_id_df
 
-    def _get_database_centroids(self, db_feat_array, db_centroid_type):
-        if db_centroid_type == 'mean':
-            return np.mean(db_feat_array, axis = 0)[:,np.newaxis]
+    def _get_playlist_centroids(self, feat_array, pl_centroid_type):
+        if pl_centroid_type == 'mean':
+            return np.mean(feat_array, axis = 0)[:,np.newaxis]
 
-        if db_centroid_type == 'k2':
-            if db_feat_arary.shape[0] > 1:
-                clustering = KMeans(n_cluster = 2, random_state = 0).fit(db_feat_array)
+        if pl_centroid_type == 'k2':
+            if feat_array.shape[0] > 1:
+                clustering = KMeans(n_clusters = 2, random_state = 0).fit(feat_array)
                 return clustering.cluster_centers_
             else:
                 raise Exception('need >= 2 data points in database.')
 
-        if db_centroid_type == 'k3':
-            if db_feat_arary.shape[0] > 2:
-                clustering = KMeans(n_cluster = 3, random_state = 0).fit(db_feat_array)
+        if pl_centroid_type == 'k3':
+            if feat_array.shape[0] > 2:
+                clustering = KMeans(n_clusters = 3, random_state = 0).fit(feat_array)
                 return clustering.cluster_centers_
             else:
                 raise Exception('need >= 3 data points in database.')
 
-        return reduced_db_feat_array
-
     def _dist2rank(self, pl_feat_array, db_feat_array, distance_type, rank_type):
-        dmat = pairwise_distances(X = db_feat_array, y = pl_feat_array, metric = distance_type)
+        dmat = pairwise_distances(X = db_feat_array, Y = pl_feat_array, metric = distance_type)
 
         # collapse the distance 
         collapse_dfun = {'mean': np.mean,
-                        'single': np.max,
-                        'complete': np.min}
-        collapse_dmat = collapse_dfun[ranking_type](dmat, axis = 1)
+                        'max': np.max,
+                        'min': np.min}
+        collapse_dmat = collapse_dfun[rank_type](dmat, axis = 1)
         
         # sort and put out the ranking 
         sorted_db_idx = np.argsort(collapse_dmat)

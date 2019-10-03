@@ -38,6 +38,9 @@ class StreamlitInterface:
 
     def display_tracks_in_tracklist(self, tracklist):
         st.write(tracklist.dataframe.loc[:,['name', 'artist_names']])
+    def display_tracks_in_rank_df(self, df):
+        st.write(df.loc[:,['rank', 'name', 'artist_names']])
+
 
 while True: 
     my_interface = StreamlitInterface(use_streamlit = True)
@@ -127,17 +130,13 @@ while True:
     st.subheader("Let's get our recommendations...")
     which_prompt = ['Here are the songs that you should give to your friend!', "Here are songs that you may like in your friend's playlist!"]
 
-    recommender  = Recommender(model_type = 'MTT_musicnn', 
-    which_layer = 'taggram', 
-    distance_type = 'euclidean', 
-    db_centroid_type = 'None', 
-    rank_type = 'mean')
+    recommender  = Recommender(model_type = 'MTT_musicnn', which_layer = 'taggram', 
+    distance_type = 'euclidean', pl_centroid_type = 'k2', rank_type = 'min')
     rank_id_df   = recommender.predict_rank(pl_ids, db_ids)
-
-    rank_df = pd.merge(rank_id_df, db_list_df, users[db_id]['tracklist'].dataframe)
+    rank_df = pd.merge(rank_id_df,  users[db_id]['tracklist'].dataframe)
 
     st.subheader(which_prompt[sel_idx-1])
-    st.write(rank_df)
+    my_interface.display_tracks_in_rank_df(rank_df)
 
     st.markdown('***')
     st.subheader("Let's explore what they look like!...")
