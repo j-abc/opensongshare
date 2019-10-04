@@ -41,7 +41,6 @@ class StreamlitInterface:
     def display_tracks_in_rank_df(self, df):
         st.write(df.loc[:,['rank', 'name', 'artist_names']])
 
-
 while True: 
     my_interface = StreamlitInterface(use_streamlit = True)
 

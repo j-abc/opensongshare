@@ -3,12 +3,130 @@ import pandas as pd
 import numpy as np
 from src import *
 
+#%%
+import tensorflow as tf
+
+#%%
+labels = [0, 1, 2, 3, 4]
+predictions_idx = [[1,0,0,0,0], [0,1,0,0,0],[0,0,1,0,0], [0,0,0,0,1,0], [0,0,0,0,0,1]]
+tf.metrics.precision_at_top_k(labels, predictions_idx)
+
+#%%
+import numpy as np
+
+#%%
+relevant_ids    = np.array(['0','1','2','3','4'])
+ranks           = [0,1,2,3,4,5,6,7,8,9]
+db_ids          = [str(i) for i in ranks]
+rank_to_all_ids = pd.DataFrame.from_dict({'rank':ranks, 'id': db_ids})
+k = 10
 
 #%%
 
+#%%
+# some other things to check: sparsity of the genre labels
+
+# another way to see it is...
+
+# HELD OUT SET, PLAYLISTS INPUT:
+# tracklist_name, track_id
+
+# DATABASE:
+# track_id
+
+# PREDICTIONS TO RUN:
+# for each tracklist, get ranked order of the database
+
+# PREDICTIONS OUTPUT:
+# track_id, tracklist_id (taken from), ranking
+
+# PER TRACKLIST RESULTS
+# tracklist_name, db_name, recall_at_k, precision_at_k, k, num_relevant_found, num_relevant_possible
+
+# OVERALL AGGREGATED RESULTS
+# average precision at k over tracklists
+# average recall at k over tracklists
+
+def get_tracklist_with_tracks_df(tracklist_names):
+    # loads all the track_ids from tracklist_names
+    return out_df
+    
+
+def get_metrics_at_k(relevant_ids, rank_to_all_ids, k):
+    # relevant ids: numpy array of ids 
+    # rank_to_all_ids: dataframe of ranking for ids
+
+    which_rows_in_ranks  = rank_to_all_ids['rank'].values < (k- 1)
+    subset_ranks         = rank_to_all_ids.loc[which_rows_in_ranks, :]
+    subset_ids           = subset_ranks['id'].values
+
+    id_intersection      = np.intersect1d(relevant_ids, subset_ids)
+
+    num_relevant_found    = len(id_intersection)
+    num_relevant_possible = len(relevant_ids)
+    num_recommended       = k
+
+    recall_at_k           = num_relevant_found/num_relevant_possible
+    precision_at_k        = num_relevant_found/k
+
+    return {'recall_at_k': recall_at_k, 'precision_at_k': precision_at_k,  'k':k, 'num_relevant_found': num_relevant_found, 'num_relevant_possible':num_relevant_possible}
+
+get_metrics_at_k(relevant_ids, rank_to_all_ids, k)
+ 
+
+#%%
+def metrics_at_k(relevant_ids, rank_to_all_ids, k):
+    # inputs: 
+    #   held out track ids 
+    #   rank-to-track_id list 
+    #   k = how many rankings to consider
+
+    # outputs:
+    #   precision at k: 
+    #   recall at k: 
+    #   RMSE: 
+    
+    # filter rank-to-track-id by rank
+    # choose the top k out of database
+
+    # calculate precision 
+    # number of recommended items @k that are relevant
+    # div
+    # number of recommended items
+
+    # calculate recall
+    # recommended items at k 
+    # div
+    # total relevant items
+    
 
 
+    return {'precision': 0, 'recall': 0}
 
+def precision:
+    pass
+
+def recall:
+    pass
+
+#%%
+user = SpotifyUserExplorer()
+playlist_id = user.get_playlist_id_from_name('nn')
+
+tracklist = TrackListSpotify()
+tracklist.add_tracks_from_public_user_playlist(playlist_id)
+tracklist.remove_tracks_with_missing_previews()
+tracklist.remove_duplicate_tracks()
+
+track_id = tracklist.dataframe['id'].values[0]
+featurizer = FeaturizerSpotify()
+featurizer.get_features_for_track(track_id, recalculate = True)
+
+
+#%%
+
+#%%
+# https://github.com/ocelma/python-recsys
 
 #%%
 #%%
