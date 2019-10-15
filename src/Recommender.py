@@ -26,7 +26,14 @@ class Recommender:
             self.featurizer   = FeaturizerMusicnn(self.model_type)
 
     def predict_rank(self, playlist_track_ids, database_track_ids, limit_n = None):
-        # first, make sure everything is in the database (?)
+        ranks = [i + 1 for i in range(len(database_track_ids))]
+        if self.model_type == 'randomized':
+            rand_db_ids = np.copy(database_track_ids)
+            np.random.shuffle(rand_db_ids)
+            rank_id_df = pd.DataFrame.from_dict({'id' : rand_db_ids, 'rank' : ranks})
+            if limit_n:
+                rank_id_df = rank_id_df.iloc[:limit_n]
+            return rank_id_df
 
         # featurize
         pl_raw_feats = pd.DataFrame.from_records(self.featurizer.get_features_for_tracks(playlist_track_ids))
@@ -40,7 +47,7 @@ class Recommender:
             pl_feat_array = np.vstack(pl_raw_feats.values)
             db_feat_array = np.vstack(db_raw_feats.values)
 
-        # do we want to reduce the db to centroids? 
+        # do we want to reduce the playlist to centroids? 
         if not(self.pl_centroid_type == 'None'):
             pl_feat_array = self._get_playlist_centroids(pl_feat_array, pl_centroid_type =self.pl_centroid_type)
 
@@ -48,8 +55,7 @@ class Recommender:
         rank2dbidx = self._dist2rank(pl_feat_array, db_feat_array, distance_type = self.distance_type, rank_type = self.rank_type)
 
         # and let's get our database ranking back
-        sorted_ids = database_track_ids[rank2dbidx]
-        ranks      = [i + 1 for i in range(len(sorted_ids))]
+        sorted_ids = database_track_ids[rank2dbidx]        
 
         # gather into dataframe and return
         rank_id_df = pd.DataFrame.from_dict({'id' : sorted_ids, 'rank' : ranks})
@@ -88,8 +94,7 @@ class Recommender:
         
         # sort and put out the ranking 
         sorted_db_idx = np.argsort(collapse_dmat)
-
-        if distance_type == 'euclidean':
-            sorted_db_idx = sorted_db_idx[::-1]
+        # if distance_type == 'euclidean':
+        #     sorted_db_idx = sorted_db_idx[::-1]
 
         return sorted_db_idx

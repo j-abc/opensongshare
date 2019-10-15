@@ -22,15 +22,21 @@ class TrackListSpotify(TrackList):
     def __init__(self, user = None):
         super(TrackList, self).__init__()
         self.connection2spotify = SpotifyConnector(user = user)
-        self.dataframe          = pd.DataFrame(columns = ['artist_names', 'artist_ids', 'name','id','preview_url','uri', 'playlist_id'])
+        self.dataframe          = pd.DataFrame(columns = ['artist_names', 'artist_ids', 'name','id','preview_url','uri', 'playlist_id', 'original_playlist'])
         self.list_db_path       = '/home/ubuntu/insight/data/raw/lists_spotify/'
         self.list_name          = None
+
+    def add_tracks_from_track_ids(self, track_ids):
+        sublist_df = pd.DataFrame.from_records(self.connection2spotify.get_tracks_from_ids_formatted(track_ids))
+        if user == None:
+            user = self.connection2spotify.user
 
     def add_all_tracks_from_public_user(self, user = None):
         sublist_df = pd.DataFrame.from_records(self.connection2spotify.get_public_user_tracks_formatted(user = user))
         if user == None:
             user = self.connection2spotify.user
         sublist_df['playlist_id'] = sublist_df.shape[0]*['[all][' + user + ']']
+        sublist_df['original_list'] = sublist_df.shape[0]*[self.list_name]
         self.dataframe = self.dataframe.append(sublist_df)
 
     def add_tracks_from_public_user_playlist(self, playlist_id, user = None):
@@ -38,6 +44,7 @@ class TrackListSpotify(TrackList):
         if user == None:
             user = self.connection2spotify.user
         sublist_df['playlist_id'] = sublist_df.shape[0]*['[' + playlist_id + ']' + '[' + user + ']']
+        sublist_df['original_list'] = sublist_df.shape[0]*[self.list_name]
         self.dataframe = self.dataframe.append(sublist_df)
 
     def load_list_from_db(self, list_name = None):
