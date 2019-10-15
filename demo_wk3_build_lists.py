@@ -17,8 +17,6 @@ def define_database(database_name, user):
 
 db_list = define_database('justin_db', user = '12125883155')
 
-# norf norf
-
 #%% and featurize them!
 
 track_ids = db_list.dataframe['id'].values

@@ -110,8 +110,8 @@ target_names   = train_pl_df['in_db'].values
 db_name = 'categories|||in_db'
 
 #%%
-get_features(playlist_names)
-get_features(target_names)
+# get_features(playlist_names)
+# get_features(target_names)
 
 #%%
 # define parameters for our recommenders

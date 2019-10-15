@@ -135,9 +135,9 @@ while True:
     instructions = 'What kind of recommender do you want to use?'
     index = st.selectbox(instructions, rec_types)
 
-    params_tag = {'model_type':'MTT_musicnn', 'distance_type':'euclidean', 'pl_centroid_type':'None', 'which_layer':'taggram', 'rank_type':'mean'}
-    params_lle = {'model_type':'spotify_audio', 'distance_type':'euclidean', 'pl_centroid_type':'None', 'which_layer':'', 'rank_type':'mean'}
-    params_rnd = {'model_type':'randomized', 'distance_type':'euclidean', 'pl_centroid_type':'None', 'which_layer':'', 'rank_type':'mean'}
+    params_tag = {'model_type':'MTT_musicnn', 'distance_type':'cosine', 'pl_centroid_type':'None', 'which_layer':'taggram', 'rank_type':'mean'}
+    params_lle = {'model_type':'spotify_audio', 'distance_type':'cosine', 'pl_centroid_type':'None', 'which_layer':'', 'rank_type':'mean'}
+    params_rnd = {'model_type':'randomized', 'distance_type':'cosine', 'pl_centroid_type':'None', 'which_layer':'', 'rank_type':'mean'}
     params_dict = {'MusicNNTags':params_tag, 'LowLevelAudio':params_lle, 'Randomized':params_rnd}
 
     if rec_types[index] == '':
