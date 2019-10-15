@@ -3,11 +3,11 @@ OpenSongShare is an extensible and flexible system for recommending songs betwee
 
 ## Project
 - **Source Code**: src. Contains classes for...
- - Interfacing with Spotify (SpotifyConnector, SpotifyUserExplorer)
- - Downloading audio previews from Spotify (DatabaseSpotifyAudio)
- - Defining lists of tracks (TrackList, TrackListSpotify)
- - Featurizing the songs/tracks (Featurizer, FeaturizerMusicnn, FeaturizerSpotify)
- - Building recommendation engines (Recommender)
+  - Interfacing with Spotify (SpotifyConnector, SpotifyUserExplorer)
+  - Downloading audio previews from Spotify (DatabaseSpotifyAudio)
+  - Defining lists of tracks (TrackList, TrackListSpotify)
+  - Featurizing the songs/tracks (Featurizer, FeaturizerMusicnn, FeaturizerSpotify)
+  - Building recommendation engines (Recommender)
 - **Streamlit Web Interface**: streamlit_interface.py. For recommending songs between the playlists of two spotify users. 
 
 ## Environment Installation
