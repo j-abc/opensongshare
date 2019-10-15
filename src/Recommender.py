@@ -9,6 +9,14 @@ from .Featurizer import *
 
 class Recommender:
     def __init__(self, model_type, which_layer = '', distance_type = 'euclidean', pl_centroid_type = 'None', rank_type = 'mean', report_streamlit = False):
+        # Class for creating a recommendation engine 
+        # model_type: MT_musicnn, MSD_musicnn, spotify_audio, or randomized
+        # which_layer: if using musicnn, which layer of the neural network will we use? 
+        # distance_type: which distance to use? manhattan, euclidean, cosine
+        # pl_centroid_type: how to define our playlist source, None, k2 (2 clusters), k1 (one cluster - mean of playlist)
+        # rank_type: how to relate our metric to our playlist source, defined in terms of clustering linkage (mean, max, min)
+
+
         # set our recommender parameters
         self.model_type       = model_type
         self.which_layer      = which_layer
@@ -26,7 +34,18 @@ class Recommender:
             self.featurizer   = FeaturizerMusicnn(self.model_type)
 
     def predict_rank(self, playlist_track_ids, database_track_ids, limit_n = None):
-        # first, make sure everything is in the database (?)
+        # given track ids of our playlist and database, 
+        # returns the ranking of the database in the context of our playlist
+        # limit_n defines how many tracks to return
+ 
+        ranks = [i + 1 for i in range(len(database_track_ids))]
+        if self.model_type == 'randomized':
+            rand_db_ids = np.copy(database_track_ids)
+            np.random.shuffle(rand_db_ids)
+            rank_id_df = pd.DataFrame.from_dict({'id' : rand_db_ids, 'rank' : ranks})
+            if limit_n:
+                rank_id_df = rank_id_df.iloc[:limit_n]
+            return rank_id_df
 
         # featurize
         pl_raw_feats = pd.DataFrame.from_records(self.featurizer.get_features_for_tracks(playlist_track_ids))
@@ -40,7 +59,7 @@ class Recommender:
             pl_feat_array = np.vstack(pl_raw_feats.values)
             db_feat_array = np.vstack(db_raw_feats.values)
 
-        # do we want to reduce the db to centroids? 
+        # do we want to reduce the playlist to centroids? 
         if not(self.pl_centroid_type == 'None'):
             pl_feat_array = self._get_playlist_centroids(pl_feat_array, pl_centroid_type =self.pl_centroid_type)
 
@@ -48,8 +67,7 @@ class Recommender:
         rank2dbidx = self._dist2rank(pl_feat_array, db_feat_array, distance_type = self.distance_type, rank_type = self.rank_type)
 
         # and let's get our database ranking back
-        sorted_ids = database_track_ids[rank2dbidx]
-        ranks      = [i + 1 for i in range(len(sorted_ids))]
+        sorted_ids = database_track_ids[rank2dbidx]        
 
         # gather into dataframe and return
         rank_id_df = pd.DataFrame.from_dict({'id' : sorted_ids, 'rank' : ranks})
@@ -60,6 +78,8 @@ class Recommender:
         return rank_id_df
 
     def _get_playlist_centroids(self, feat_array, pl_centroid_type):
+        # helper function: define source of playlist
+
         if pl_centroid_type == 'mean':
             return np.mean(feat_array, axis = 0)[:,np.newaxis]
 
@@ -78,6 +98,8 @@ class Recommender:
                 raise Exception('need >= 3 data points in database.')
 
     def _dist2rank(self, pl_feat_array, db_feat_array, distance_type, rank_type):
+        # helper function: rank our database according to our distance
+
         dmat = pairwise_distances(X = db_feat_array, Y = pl_feat_array, metric = distance_type)
 
         # collapse the distance 
@@ -88,8 +110,5 @@ class Recommender:
         
         # sort and put out the ranking 
         sorted_db_idx = np.argsort(collapse_dmat)
-
-        if distance_type == 'euclidean':
-            sorted_db_idx = sorted_db_idx[::-1]
 
         return sorted_db_idx

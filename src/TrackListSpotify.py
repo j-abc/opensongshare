@@ -20,17 +20,24 @@ from .TrackList import *
 
 class TrackListSpotify(TrackList):
     def __init__(self, user = None):
+        # Class for defining Tracks that are derived from Spotify 
         super(TrackList, self).__init__()
         self.connection2spotify = SpotifyConnector(user = user)
-        self.dataframe          = pd.DataFrame(columns = ['artist_names', 'artist_ids', 'name','id','preview_url','uri', 'playlist_id'])
+        self.dataframe          = pd.DataFrame(columns = ['artist_names', 'artist_ids', 'name','id','preview_url','uri', 'playlist_id', 'original_playlist'])
         self.list_db_path       = '/home/ubuntu/insight/data/raw/lists_spotify/'
         self.list_name          = None
+
+    def add_tracks_from_track_ids(self, track_ids):
+        sublist_df = pd.DataFrame.from_records(self.connection2spotify.get_tracks_from_ids_formatted(track_ids))
+        if user == None:
+            user = self.connection2spotify.user
 
     def add_all_tracks_from_public_user(self, user = None):
         sublist_df = pd.DataFrame.from_records(self.connection2spotify.get_public_user_tracks_formatted(user = user))
         if user == None:
             user = self.connection2spotify.user
         sublist_df['playlist_id'] = sublist_df.shape[0]*['[all][' + user + ']']
+        sublist_df['original_list'] = sublist_df.shape[0]*[self.list_name]
         self.dataframe = self.dataframe.append(sublist_df)
 
     def add_tracks_from_public_user_playlist(self, playlist_id, user = None):
@@ -38,9 +45,11 @@ class TrackListSpotify(TrackList):
         if user == None:
             user = self.connection2spotify.user
         sublist_df['playlist_id'] = sublist_df.shape[0]*['[' + playlist_id + ']' + '[' + user + ']']
+        sublist_df['original_list'] = sublist_df.shape[0]*[self.list_name]
         self.dataframe = self.dataframe.append(sublist_df)
 
     def load_list_from_db(self, list_name = None):
+        # load a predefined track list
         if list_name == None:
             list_name = self.list_name
         else:
@@ -48,9 +57,11 @@ class TrackListSpotify(TrackList):
         self.dataframe = pd.read_pickle(os.path.join(self.list_db_path, self.list_name + '.pkl'))
 
     def set_list_name(self, list_name = None):
+        # define the name of our track list
         self.list_name = list_name
 
     def write_list_to_db(self, list_name = None):
+        # write the track list to our database
         if list_name == None:
             list_name = self.list_name
         else:
@@ -58,6 +69,7 @@ class TrackListSpotify(TrackList):
         self.dataframe.to_pickle(os.path.join(self.list_db_path, self.list_name + '.pkl'))
 
     def populate_audio_database(self):
+        # get all the audio previews for the tracks in our track list
         db_audio = DatabaseSpotifyAudio()
         track_id_list = self.dataframe.loc[:,'id'].values
         num_tracks = len(track_id_list)

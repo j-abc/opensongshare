@@ -38,6 +38,8 @@ class StreamlitInterface:
 
     def display_tracks_in_tracklist(self, tracklist):
         st.write(tracklist.dataframe.loc[:,['name', 'artist_names']])
+    def display_tracks_in_rank_df(self, df):
+        st.write(df.loc[:,['rank', 'name', 'artist_names']])
 
 while True: 
     my_interface = StreamlitInterface(use_streamlit = True)
@@ -111,38 +113,6 @@ while True:
     st.write("And in your friend's playlist!")
     my_interface.display_tracks_in_tracklist(users['2']['tracklist'])
 
-
-    feat_musicnn   = FeaturizerMusicnn()
-    for idx in ['1', '2']:
-        track_ids      = users[idx]['tracklist'].dataframe['id'].values
-        track_features = feat_musicnn.get_features_for_tracks(track_ids)
-        features_df    = pd.DataFrame.from_records(track_features)
-        tagmat         = np.vstack(features_df['taggram'].values)
-        tag_df         = pd.DataFrame(data = tagmat, columns = feat_musicnn.tags)
-        tag_df['id']   = features_df['id']
-        users[idx]['feat_df'] = features_df
-        users[idx]['tag_df']  = tag_df
-
-    from sklearn.metrics.pairwise import pairwise_distances
-    import numpy as np
-
-    def rank_db_from_playlist(pl_feat_df, db_feat_df, db_list_df, feature_name = 'taggram', metric = 'euclidean', num_songs = 20): 
-            pl_feat_array = np.vstack(pl_feat_df[feature_name].values)
-            db_feat_array = np.vstack(db_feat_df[feature_name].values)
-
-            dmat = pairwise_distances(X = db_feat_array, Y = pl_feat_array, metric = metric)
-
-            collapse_dmat = np.mean(dmat, axis = 1)
-            print(collapse_dmat.shape)
-
-            sorted_db_idx = np.argsort(collapse_dmat)
-            # sorted_db_idx = sorted_db_idx[::-1] # turn on for euclidean to get worst songs
-            # top 5 and bottom 5 - and user assessment
-            which_db_songs = sorted_db_idx[:num_songs]
-            id_df = db_feat_df.loc[which_db_songs,['id']]
-            id_df.insert(1, "rank", [i for i in range(id_df.shape[0])], True)
-            return pd.merge(id_df, db_list_df, on = 'id')
-
     if sel_idx == 1:
         pl_id = '2'
         db_id = '1'
@@ -150,61 +120,65 @@ while True:
         pl_id = '1'
         db_id = '2'
 
+    # get track ids
+    pl_ids = users[pl_id]['tracklist'].dataframe['id'].values
+    db_ids = users[db_id]['tracklist'].dataframe['id'].values
+
+    # get recommendation 
     st.markdown('***')
     st.subheader("Let's get our recommendations...")
+
+    # users['1']['tracklist'].populate_audio_database()
+    # users['2']['tracklist'].populate_audio_database()
+
+    rec_types = ['', 'MusicNNTags', 'LowLevelAudio', 'Randomized']
+    instructions = 'What kind of recommender do you want to use?'
+    index = st.selectbox(instructions, rec_types)
+
+    params_tag = {'model_type':'MTT_musicnn', 'distance_type':'cosine', 'pl_centroid_type':'None', 'which_layer':'taggram', 'rank_type':'mean'}
+    params_lle = {'model_type':'spotify_audio', 'distance_type':'cosine', 'pl_centroid_type':'None', 'which_layer':'', 'rank_type':'mean'}
+    params_rnd = {'model_type':'randomized', 'distance_type':'cosine', 'pl_centroid_type':'None', 'which_layer':'', 'rank_type':'mean'}
+    params_dict = {'MusicNNTags':params_tag, 'LowLevelAudio':params_lle, 'Randomized':params_rnd}
+
+    if rec_types[index] == '':
+        break
+
+    recommender = Recommender(**params_dict[rec_types[index]])
+    # recommender  = Recommender(model_type = 'MTT_musicnn', which_layer = 'taggram', 
+    # distance_type = 'euclidean', pl_centroid_type = 'None', rank_type = 'mean')
+
+    rank_id_df   = recommender.predict_rank(pl_ids, db_ids, limit_n = 10)
+    rank_df = pd.merge(rank_id_df,  users[db_id]['tracklist'].dataframe)
+
     which_prompt = ['Here are the songs that you should give to your friend!', "Here are songs that you may like in your friend's playlist!"]
     st.subheader(which_prompt[sel_idx-1])
-    rank_df = rank_db_from_playlist(users[pl_id]['feat_df'], users[db_id]['feat_df'], users[db_id]['tracklist'].dataframe)
-    st.write(rank_df)
+    my_interface.display_tracks_in_rank_df(rank_df)
 
-    st.markdown('***')
-    st.subheader("Let's explore what they look like!...")
+    # st.markdown('***')
+    # st.subheader("Let's explore what they look like!...")
 
-    # Clustering
-    from sklearn.manifold import TSNE
-    from sklearn import cluster
+    # # Clustering
+    # from sklearn.manifold import TSNE
+    # from sklearn import cluster
 
-    # Basic
-    import numpy as np
-    import pandas as pd
-    import seaborn as sns
-    from matplotlib import pyplot as plt
+    # # Basic
+    # import numpy as np
+    # import pandas as pd
+    # import seaborn as sns
+    # from matplotlib import pyplot as plt
 
-    # How does this look in latent dimensional space?? 
-    full_tag_df = pd.concat([users['1']['tag_df'], users['2']['tag_df']])
-    full_tag_df.drop(columns = ['id'], inplace = True)
+    # # How does this look in latent dimensional space?? 
+    # full_tag_df = pd.concat([users['1']['tag_df'], users['2']['tag_df']])
+    # full_tag_df.drop(columns = ['id'], inplace = True)
 
-    tsne = TSNE(n_components = 2, verbose = 1, perplexity = 40, n_iter = 2000)
-    tsne_results = tsne.fit_transform(full_tag_df.values)
+    # tsne = TSNE(n_components = 2, verbose = 1, perplexity = 40, n_iter = 2000)
+    # tsne_results = tsne.fit_transform(full_tag_df.values)
 
-    plt.figure(figsize = (16, 11))
-    plt.scatter(tsne_results[:,0], tsne_results[:,1])
-    st.pyplot()
+    # plt.figure(figsize = (16, 11))
+    # plt.scatter(tsne_results[:,0], tsne_results[:,1])
+    # st.pyplot()
 
 
 
     
     break
-
-# how can we recommend songs that go into a shared playlist
-# tool - recommend songs for friends
-
-# which of your music you're going to like... 
-
-# only that person likes...
-
-# overlapping songs that you enjoy
-# yes or no to each other...
-
-# well, my tool 
-# you can recommend songs to each other
-# and even create a playlist out of it..
-
-# would you like to make a playlist from these playlists?
-# how many songs from yours
-# how many songs from theirs
-
-# download both as csvs
-
-# interpretability - here's what you like
-# overlapping space and tastes
