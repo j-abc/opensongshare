@@ -17,7 +17,6 @@ sys.path.insert(0, dir_of_file)
 #%%
 from songfinder.src import connect
 
-
 #%% get instance
 spotify = connect.get_spotify_instance(keys['client_id'], keys['client_secret'])
 
@@ -53,7 +52,6 @@ print(songs_df.shape)
 
 #%% 
 # download the data
-
 preview_songs_df = songs_df[~songs_df['preview_url'].isnull()]
 for index, row in preview_songs_df.iterrows():
     print(row['preview_url'])
@@ -165,6 +163,12 @@ class song_list_def:
         # def load_songs_features
 
 
+#%%
+from musicnn.extractor import extractor
+
+# log-mel spectrogram # for each of 3 seconds
+
+#%%
 # class recommender
 
 #####

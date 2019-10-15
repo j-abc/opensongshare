@@ -1,0 +1,32 @@
+class SpotifyConnector
+class DatabaseSpotifyAudio < SpotifyConnector
+class SpotifyUserExplorer < SpotifyConnector
+
+class TrackList 
+class TrackListSpotify < SpotifyConnector, TrackList
+class TrackListBillboards < BillboardsConnector, TrackList
+
+class Featurizer (DONE)
+    provide audio_db_path 
+    provide track name
+    saves the features out to tracks
+    loads the features up from tracks
+
+class FeatureSpotifyLow < Featurizer (DONE)
+    sets feature name as 'spotify_low_audio'
+    sets features included as 'spotify_audio_extra'
+    calculates relevant features for input track
+    calculates relevant feature for input tracks
+    loads relevant features for input track
+    loads relevant features for input tracks
+
+class FeatureMelSpectrogram < Featurizer
+class FeatureMusicnn < Featurizer (DONE)
+
+class Recommender 
+    recommender_maker
+        feature2similarity
+        
+    euclidean distance
+    
+    
