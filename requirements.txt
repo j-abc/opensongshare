@@ -1,4 +1,16 @@
 # To install these Python dependencies, please type:
 # pip install -r requirements.txt
 
+numpy
+pandas
+scikit-learn
+scipy
+seaborn
+tensorflow
+tensorflow-estimator
+keras
 streamlit
+musicnn
+spotipy
+wget
+
