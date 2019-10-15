@@ -20,6 +20,7 @@ from .TrackList import *
 
 class TrackListSpotify(TrackList):
     def __init__(self, user = None):
+        # Class for defining Tracks that are derived from Spotify 
         super(TrackList, self).__init__()
         self.connection2spotify = SpotifyConnector(user = user)
         self.dataframe          = pd.DataFrame(columns = ['artist_names', 'artist_ids', 'name','id','preview_url','uri', 'playlist_id', 'original_playlist'])
@@ -48,6 +49,7 @@ class TrackListSpotify(TrackList):
         self.dataframe = self.dataframe.append(sublist_df)
 
     def load_list_from_db(self, list_name = None):
+        # load a predefined track list
         if list_name == None:
             list_name = self.list_name
         else:
@@ -55,9 +57,11 @@ class TrackListSpotify(TrackList):
         self.dataframe = pd.read_pickle(os.path.join(self.list_db_path, self.list_name + '.pkl'))
 
     def set_list_name(self, list_name = None):
+        # define the name of our track list
         self.list_name = list_name
 
     def write_list_to_db(self, list_name = None):
+        # write the track list to our database
         if list_name == None:
             list_name = self.list_name
         else:
@@ -65,6 +69,7 @@ class TrackListSpotify(TrackList):
         self.dataframe.to_pickle(os.path.join(self.list_db_path, self.list_name + '.pkl'))
 
     def populate_audio_database(self):
+        # get all the audio previews for the tracks in our track list
         db_audio = DatabaseSpotifyAudio()
         track_id_list = self.dataframe.loc[:,'id'].values
         num_tracks = len(track_id_list)

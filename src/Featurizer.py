@@ -4,6 +4,8 @@ import pickle
 
 class Featurizer:
     def __init__(self, name = ''):
+        # superclass for processing and storing features for songs
+
         self.audio_db_path        = '/home/ubuntu/insight/data/raw/spotify_audio/mp3/'
         self.features_db_path     = '/home/ubuntu/insight/data/feature_sets/'
         self.name                 = name
@@ -13,6 +15,9 @@ class Featurizer:
         self.feature_keys         = ['']
 
     def get_features_for_track(self, track_id, recalculate = False):
+        # either loads or computes features for spotify track given a track_id
+        # requires the subclass to have defined 'calculate_features_for_track'
+
         track_feature_path = os.path.join(self.features_path, track_id + '.pkl')
         if os.path.exists(track_feature_path) and not recalculate:
             # load the track features
@@ -26,10 +31,14 @@ class Featurizer:
         return features
 
     def get_features_for_tracks(self, track_ids, recalculate = False):
+        # loads features for multiple tracks 
         return [self.get_features_for_track(track_id, recalculate = recalculate) for track_id in track_ids]
 
     def calculate_features_for_track(self, track_id):
+        # calculates features for a track and returns as a dictionary
+        # overwritten in subclasses
         return {'id': track_id}
 
     def get_track_mp3_path(self, track_id):
+        # extract the track mp3 audio sample from a track
         return os.path.join(self.audio_db_path, track_id + '.mp3')

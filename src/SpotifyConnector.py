@@ -18,6 +18,7 @@ import json
 class SpotifyConnector:
     # intialize the connector
     def __init__(self, client_id = None, client_secret = None, user = None):
+        # Class for connecting to spotify through spotipy 
         keys_json_path = '/home/ubuntu/insight/keys.json'
         with open(keys_json_path) as json_file:
             self.keys = json.load(json_file)
@@ -94,22 +95,12 @@ class SpotifyConnector:
 
     def _format_playlist_info(self, playlist):
         playlist_info       = playlist
-        # ['id']
-        # ['name']
-        # ['tracks']['total']
         return playlist_info
 
     # hidden helper methods
     def __get_instance(self, client_id, client_secret):
-        """Get a Spotify instance that can pull information from the Spotify API.
-
-        Args:
-            client_id (str): Client ID for accessing Spotify API.
-            client_secret (str): Secret client ID (key) for accessing Spotify API.
-
-        Returns:
-            S: A Spotify instance that can be used to query the Spotify API.
-        """
+        # Get a Spotify instance that can pull information from the Spotify API.
+        
         token = su.oauth2.SpotifyClientCredentials(
             client_id=client_id,
             client_secret=client_secret

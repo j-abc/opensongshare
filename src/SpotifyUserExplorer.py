@@ -18,6 +18,7 @@ from .SpotifyConnector import SpotifyConnector
 
 class SpotifyUserExplorer:
     def __init__(self, user = None):
+        # Class for looking at public playlist tracks from a spotify user
         self.connection2spotify = SpotifyConnector(user = user)
         self.playlist_df   = pd.DataFrame.from_records(self.connection2spotify.get_public_user_playlists_formatted())
     def list_playlist_names(self):
